@@ -10,6 +10,7 @@ use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Maxx\Ai\Auth\MachineTokenProvider;
+use Maxx\Ai\Auth\PlatformTokenProvider;
 use Maxx\Ai\Billing\BillingEvent;
 use Maxx\Ai\Billing\BillingProcessor;
 use Maxx\Ai\Billing\BillingVerifier;
@@ -53,7 +54,7 @@ try {
     [$script, $configFile, $phase] = $argv;
     $config = json_decode(file_get_contents($configFile), true, 64, JSON_THROW_ON_ERROR);
     check(preg_match('/\Auai_test_[a-f0-9]{32}_sdk\z/', $config['database']['search_path']) === 1, 'Refusing non-test database schema.');
-    $tokens = new MachineTokenProvider(
+    $tokens = isset($config['access_token']) ? new PlatformTokenProvider($config['access_token']) : new MachineTokenProvider(
         file_get_contents($config['machine_key']), 'machine-test', 'maxxsata-dummy',
         'hrms-service', 'account-1', 'app-1', 'dev-1',
         ['actions:execute', 'receipts:deliver', 'billing:read', 'billing:ack', 'completion:report', 'human:review'],
@@ -226,6 +227,24 @@ try {
         rejected(fn () => $client->acknowledge($state['events'][0]['event_id'], 'conflicting-invoice'), 409);
         $statement = $client->statement()->data;
         check($statement['held'] === '12.000000000000', 'Unknown exposure was released.');
+    } elseif ($phase === 'platform') {
+        check($client->statement()->data['held'] === '12.000000000000', 'Platform credential scope mismatch.');
+        $actionId = $state['actions']['accepted']['action_id'];
+        $context = new ActionContext('tenant-1', 'user-1', 'hrms', 'policy', 'interpret');
+        $client->scopeKeys($context);
+        $replay = $client->authorize(new AuthorizationRequest(
+            $context, 'sdk-accepted', 'resource-1', 'model-1', 'local', 'dis-service', 'job-1',
+        ));
+        check($replay->string('logical_action_id') === $actionId
+            && $replay->string('authorization') === $state['actions']['accepted']['authorization'],
+            'Platform authentication changed authorization replay.');
+        check($client->status($actionId)->string('status') === 'completed', 'Platform SDK identity did not match registered deployment.');
+        rejected(fn () => $client->complete($actionId, new CompletionRequest(
+            'sdk-completion-accepted', 'accepted', str_repeat('a', 64), 'IN', 'sdk-v1',
+            'reviewer-1', 'policy-adopted-1',
+        )), 403);
+    } elseif ($phase === 'platform-revoked') {
+        rejected(fn () => $client->statement(), 401);
     } else {
         throw new InvalidArgumentException('Unknown integration test phase.');
     }

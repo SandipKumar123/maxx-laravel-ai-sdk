@@ -8,6 +8,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Maxx\Ai\Auth\PlatformTokenProvider;
+use Maxx\Ai\Auth\TokenProvider;
 use Maxx\Ai\Billing\BillingEvent;
 use Maxx\Ai\Billing\BillingProcessor;
 use Maxx\Ai\Billing\BillingVerifier;
@@ -230,6 +232,30 @@ final class LaravelTest extends TestCase
         $this->app['config']->set('maxx-ai.enabled', false);
         $this->expectException(\LogicException::class);
         $this->app->make(Settings::class);
+    }
+
+    public function testPlatformModeUsesIssuedSecretWithoutMachinePrivateKey(): void
+    {
+        $this->app['config']->set('maxx-ai.auth_mode', 'platform');
+        $this->app['config']->set('maxx-ai.access_token', 'maxx_sdk_'.str_repeat('b', 43));
+        $provider = $this->app->make(TokenProvider::class);
+        self::assertInstanceOf(PlatformTokenProvider::class, $provider);
+        self::assertSame('maxx_sdk_'.str_repeat('b', 43), $provider->token());
+    }
+
+    public function testMissingPlatformSecretFailsExplicitly(): void
+    {
+        $this->app['config']->set('maxx-ai.auth_mode', 'platform');
+        $this->app['config']->set('maxx-ai.access_token', null);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->app->make(TokenProvider::class);
+    }
+
+    public function testUnknownAuthenticationModeFailsExplicitly(): void
+    {
+        $this->app['config']->set('maxx-ai.auth_mode', 'invalid');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->app->make(TokenProvider::class);
     }
 
     public function testConcurrentProcessesInvoiceSameEventOnlyOnce(): void

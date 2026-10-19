@@ -7,6 +7,7 @@ namespace Maxx\Ai\Laravel;
 use GuzzleHttp\Client;
 use Illuminate\Support\ServiceProvider;
 use Maxx\Ai\Auth\MachineTokenProvider;
+use Maxx\Ai\Auth\PlatformTokenProvider;
 use Maxx\Ai\Auth\TokenProvider;
 use Maxx\Ai\Billing\BillingProcessor;
 use Maxx\Ai\Billing\BillingVerifier;
@@ -35,8 +36,20 @@ final class MaxxAiServiceProvider extends ServiceProvider
                 (float) $app['config']->get('maxx-ai.connect_timeout'),
             );
         });
-        $this->app->bindIf(TokenProvider::class, function ($app): MachineTokenProvider {
+        $this->app->bindIf(TokenProvider::class, function ($app): TokenProvider {
             $app->make(Settings::class);
+            $mode = $app['config']->get('maxx-ai.auth_mode');
+            if ($mode === 'platform') {
+                $token = $app['config']->get('maxx-ai.access_token');
+                if (!is_string($token)) {
+                    throw new \InvalidArgumentException('Configure MAXX_AI_ACCESS_TOKEN for platform authentication.');
+                }
+
+                return new PlatformTokenProvider($token);
+            }
+            if ($mode !== 'machine') {
+                throw new \InvalidArgumentException('MAXX_AI_AUTH_MODE must be machine or platform.');
+            }
             $config = $app['config']->get('maxx-ai.machine');
 
             return new MachineTokenProvider(

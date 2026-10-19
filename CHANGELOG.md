@@ -2,6 +2,10 @@
 
 ## Unreleased - 0.1.0 development
 
+- Optional platform-issued, server-scoped SDK credential mode; existing machine JWT mode
+  remains the default. Credential creation, expiry, rotation and revocation are backend-owned.
+- Real HTTP qualification now also verifies issued-token access, human-review denial and revocation.
+
 - Standalone Composer package for PHP 8.2+ and Laravel 12.
 - Typed M2 authorization, status, recovery, completion, entitlements, statements,
   receipt delivery, billing pull and acknowledgment.

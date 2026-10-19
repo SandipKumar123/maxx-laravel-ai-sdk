@@ -6,6 +6,8 @@ return [
     'base_url' => env('MAXX_AI_BASE_URL', 'http://127.0.0.1:8000'),
     'timeout' => 15,
     'connect_timeout' => 5,
+    'auth_mode' => env('MAXX_AI_AUTH_MODE', 'machine'),
+    'access_token' => env('MAXX_AI_ACCESS_TOKEN'),
     'machine' => [
         'private_key_path' => env('MAXX_AI_MACHINE_PRIVATE_KEY_PATH'),
         'kid' => env('MAXX_AI_MACHINE_KID'),

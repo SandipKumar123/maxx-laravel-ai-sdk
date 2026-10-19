@@ -58,6 +58,45 @@ The package is disabled by default.
 
 ### Identity and keys
 
+#### Platform-issued customer credential
+
+With a backend including migration `0006_m2_client_credentials`, a platform administrator can
+register the customer account/application/deployment under **Client Access**, then issue a
+scoped credential. Save the secret once in the Laravel server environment:
+
+```dotenv
+MAXX_AI_AUTH_MODE=platform
+MAXX_AI_ACCESS_TOKEN=<one-time-secret>
+MAXX_AI_ACCOUNT_ID=client-a
+MAXX_AI_APPLICATION_ID=client-a-hrms
+MAXX_AI_DEPLOYMENT_ID=client-a-india
+```
+
+Keep the SDK enabled only in an approved local/testing environment with provisional contracts
+explicitly allowed. Re-publish/merge the updated SDK config in an existing installation, then run
+`php artisan config:clear` after changing environment settings. This auth mode requires a version
+of this package containing `PlatformTokenProvider`; older published versions do not support it.
+
+Clients do not need a machine private signing key in this mode. Identity and permissions are
+resolved by the backend from the stored credential hash, not from client-supplied account IDs.
+The account/application config remains required for billing-signature verification; configure
+the trusted backend billing public key ring separately.
+
+Use separate customer accounts, and a credential per deployment or service. Secrets expire in
+1-90 days; rotation immediately revokes the old secret and displays a replacement once.
+Revocation rejects new authentication requests; it does not cancel already-authorized M1 work.
+Never place secrets in browser code, Git, chat or logs. A lost issuance response must be reconciled
+by refreshing the credential list and revoking inaccessible credentials before issuing another.
+
+Allowed permissions are `actions:execute`, `completion:report`, `billing:read`, and `billing:ack`.
+These credentials cannot issue funding, deliver internal receipts or attest human approval.
+Accepted completion of a human-review action still needs a separate trusted human identity.
+Onboarding does not configure actions, policies, pricing, budgets, funding or host invoice handlers.
+Billing streams are application/invoice-owner scoped, not isolated by regional deployment.
+
+#### Existing machine JWT mode
+
+`MAXX_AI_AUTH_MODE=machine` remains the default for compatibility.
 Configure the machine issuer, subject, account, application, deployment and `kid` to match
 the backend registration. `MAXX_AI_MACHINE_PRIVATE_KEY_PATH` must point to a protected local
 RSA private-key file (2048 bits minimum) **outside the web root**. The corresponding public key

@@ -7,6 +7,7 @@ namespace Maxx\Ai\Tests;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Maxx\Ai\Auth\MachineTokenProvider;
+use Maxx\Ai\Auth\PlatformTokenProvider;
 use Maxx\Ai\Billing\BillingVerifier;
 use Maxx\Ai\Exceptions\VerificationException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -14,6 +15,16 @@ use PHPUnit\Framework\TestCase;
 
 final class SecurityTest extends TestCase
 {
+    public function testPlatformCredentialIsOpaqueAndRedacted(): void
+    {
+        $token = 'maxx_sdk_'.str_repeat('a', 43);
+        $provider = new PlatformTokenProvider($token);
+        self::assertSame($token, $provider->token());
+        self::assertStringNotContainsString($token, print_r($provider, true));
+        $this->expectException(\InvalidArgumentException::class);
+        new PlatformTokenProvider("maxx_sdk_invalid\r\n");
+    }
+
     public function testMachineClaimsExactlyMatchStrictBackendContract(): void
     {
         $keys = Keys::pair();
