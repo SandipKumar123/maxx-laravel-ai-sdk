@@ -1,0 +1,107 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "m1-dummy-v1",
+      "default": "m1-dummy-v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "logical_action_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Logical Action Id",
+      "type": "string"
+    },
+    "attempt_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "application_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Application Id",
+      "type": "string"
+    },
+    "deployment_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Deployment Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "resource_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Resource Id",
+      "type": "string"
+    },
+    "model_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Model Id",
+      "type": "string"
+    },
+    "region": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Region",
+      "type": "string"
+    },
+    "capability": {
+      "const": "text",
+      "default": "text",
+      "title": "Capability",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "input_text": {
+      "format": "password",
+      "title": "Input Text",
+      "type": "string",
+      "writeOnly": true
+    },
+    "max_output_tokens": {
+      "maximum": 100000,
+      "minimum": 1,
+      "title": "Max Output Tokens",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "logical_action_id",
+    "attempt_id",
+    "application_id",
+    "deployment_id",
+    "tenant_id",
+    "resource_id",
+    "model_id",
+    "region",
+    "idempotency_key",
+    "input_text",
+    "max_output_tokens"
+  ],
+  "title": "ExecutionRequest",
+  "type": "object"
+}

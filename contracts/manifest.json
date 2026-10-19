@@ -1,0 +1,45 @@
+{
+    "provisional_only": true,
+    "schemas": {
+        "AuthorizeInput": {
+            "source": "contracts/schemas/m2-dummy-v1/AuthorizeInput.json",
+            "source_sha256": "3ae333abfe0bb8009a1d58b0412a4346e8b11b55fd94b19a3ea696f3eba9c6c9",
+            "sha256": "df32e5fdcb9e6597cc4dc6c66cb55e0e9cfedb65c833910296c6bff79ea0489f"
+        },
+        "RecoveryInput": {
+            "source": "contracts/schemas/m2-dummy-v1/RecoveryInput.json",
+            "source_sha256": "939286d5fb4eb6b3878c63b8ee5fc059b157b8900e896bb463d4af821fb1ee02",
+            "sha256": "23fdf60ff9e17ddb3f97b080b55adb6c5e2f504c0fd21da0010ac130c5db70e3"
+        },
+        "CompletionInput": {
+            "source": "contracts/schemas/m2-dummy-v1/CompletionInput.json",
+            "source_sha256": "d2b4644d49cf7a67ddce0173710a874243bcf8c9005aa97591a81193bf118dd3",
+            "sha256": "22991960baeba46e29907d4e5d596513000242d2562adca1c1afe1b382ad2601"
+        },
+        "EntitlementInput": {
+            "source": "contracts/schemas/m2-dummy-v1/EntitlementInput.json",
+            "source_sha256": "06f261d106f37d033002f32c496490b72878cc5abdd17f4a83d44c466a8171b3",
+            "sha256": "7d403e9a5e552da8da9816c311d47ba4c11c10fc5cf75d5997f346b60530bc42"
+        },
+        "BillingAcknowledgment": {
+            "source": "contracts/schemas/m2-dummy-v1/BillingAcknowledgment.json",
+            "source_sha256": "76ba361078c9b6b7226317641adbc6f0fa8ee48234863bcdaed4e0fedb8f33a1",
+            "sha256": "47e5bfd917d0bcf12eb1354359295793881a3db825622808d45084cf04ad3de2"
+        },
+        "MachineClaims": {
+            "source": "contracts/schemas/m2-dummy-v1/MachineClaims.json",
+            "source_sha256": "9eb387c4d899c7bb182aa18a21f4c674c4b46f4076eac1a30b66795fe68648dc",
+            "sha256": "514da7f923caa0a20eb2dbb989df85d393441d8fe2bf1987e603ed16f2bcf16d"
+        },
+        "SignedReceiptInput": {
+            "source": "contracts/schemas/m2-dummy-v1/SignedReceiptInput.json",
+            "source_sha256": "9e5f0ca548c548bb61ed7fbbbb0b3d257a87e1702bae537639e4c83e8ae32653",
+            "sha256": "489d7c80a9a21c767f5baec23a40b2de488b10c5af2a1b5ba6ed9d17f59b83aa"
+        },
+        "ExecutionRequest": {
+            "source": "contracts/schemas/m1-dummy-v1/ExecutionRequest.json",
+            "source_sha256": "d45c5706635149b7e0d465c1da7a40ee9b485fe552ed44b7aa3d5a950d4265b1",
+            "sha256": "81952ed4a9b58e8838b9a9b4c85acea6de87c75c59b20642a438d6d2733c4ec0"
+        }
+    }
+}

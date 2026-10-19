@@ -1,0 +1,44 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "amount": {
+      "anyOf": [
+        {
+          "maximum": 1000000000000.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Amount"
+    },
+    "confirmed": {
+      "title": "Confirmed",
+      "type": "boolean"
+    },
+    "source_reference": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Source Reference",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "amount",
+    "confirmed",
+    "source_reference"
+  ],
+  "title": "EntitlementInput",
+  "type": "object"
+}

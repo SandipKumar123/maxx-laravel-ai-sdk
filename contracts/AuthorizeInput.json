@@ -1,0 +1,104 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "external_tenant_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "External Tenant Id",
+      "type": "string"
+    },
+    "actor_ref": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Actor Ref",
+      "type": "string"
+    },
+    "module_code": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Module Code",
+      "type": "string"
+    },
+    "service_code": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Service Code",
+      "type": "string"
+    },
+    "action_code": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Action Code",
+      "type": "string"
+    },
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "resource_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Resource Id",
+      "type": "string"
+    },
+    "model_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Model Id",
+      "type": "string"
+    },
+    "region": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Region",
+      "type": "string"
+    },
+    "executor_subject": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Executor Subject",
+      "type": "string"
+    },
+    "dis_job_id": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Dis Job Id"
+    }
+  },
+  "required": [
+    "external_tenant_id",
+    "actor_ref",
+    "module_code",
+    "service_code",
+    "action_code",
+    "idempotency_key",
+    "resource_id",
+    "model_id",
+    "region",
+    "executor_subject"
+  ],
+  "title": "AuthorizeInput",
+  "type": "object"
+}

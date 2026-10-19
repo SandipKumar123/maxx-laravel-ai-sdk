@@ -1,0 +1,17 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "invoice_reference": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Invoice Reference",
+      "type": "string"
+    }
+  },
+  "required": [
+    "invoice_reference"
+  ],
+  "title": "BillingAcknowledgment",
+  "type": "object"
+}

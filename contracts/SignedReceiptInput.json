@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "signed_receipt": {
+      "maxLength": 32768,
+      "minLength": 10,
+      "title": "Signed Receipt",
+      "type": "string"
+    }
+  },
+  "required": [
+    "signed_receipt"
+  ],
+  "title": "SignedReceiptInput",
+  "type": "object"
+}

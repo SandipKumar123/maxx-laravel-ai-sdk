@@ -1,0 +1,32 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "idempotency_key": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "dis_job_id": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Dis Job Id"
+    }
+  },
+  "required": [
+    "idempotency_key"
+  ],
+  "title": "RecoveryInput",
+  "type": "object"
+}

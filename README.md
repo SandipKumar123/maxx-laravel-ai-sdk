@@ -1,0 +1,263 @@
+# Maxx Laravel AI SDK
+
+Standalone Composer package: **`maxx/laravel-ai-sdk`**.
+
+This is a library, not a web application or standalone server. Do not expose this directory
+through Apache. A deny-all `.htaccess` is included for XAMPP; ensure the server honors it or
+exclude the directory from the document root.
+
+**Status: provisional local/test SDK, not an approved production release.**
+Implements the reusable SDK portion of worksheet task **UAI-WF-03-A** against
+`m1-dummy-v1` / `m2-dummy-v1`. Production and staging environments are intentionally
+rejected: only `local` and `testing` with explicit opt-in are supported. Frozen C01-C08
+contracts and human acceptance are still required.
+
+## Requirements and scope
+
+- PHP 8.2+ with OpenSSL, JSON and mbstring; Laravel 12.
+- No PHP/Laravel host application was available for audit. PHP 8.2.12 is available locally.
+  Host applications must confirm their versions before installation; Laravel 10/11 support
+  is not claimed.
+- Backend machine identity and registered account/application/deployment, matching approved
+  local/test key configuration and enabled M1/M2 runtimes.
+- The SDK does not implement DIS, replicate users/tenant tables, provision credits automatically,
+  adopt HRMS policies, calculate tax or create legal invoices.
+- HRMS/CRM business adapters (03-B/03-C) remain in their own host repositories.
+
+## Install in an existing Laravel application
+
+This repository is separate from the Python backend. Until a private VCS release is published,
+add a Composer path repository to the **host application's** `composer.json`:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../maxx-laravel-ai-sdk",
+      "options": {"symlink": false}
+    }
+  ]
+}
+```
+
+Then run from that Laravel application's directory:
+
+```powershell
+composer require maxx/laravel-ai-sdk:"dev-main"
+php artisan vendor:publish --tag=maxx-ai-config
+```
+
+Laravel auto-discovers the service provider. No routes, migrations, accounts, funding, workers
+or HTTP calls run automatically. Pin an approved immutable release in consuming applications
+when a release exists; `dev-main` is only a local development installation.
+
+Copy the names from [the environment example](examples/.env.example) into your host environment.
+Set `APP_ENV=local` or `testing`; never change a production application to `local` to bypass the gate.
+The package is disabled by default.
+
+### Identity and keys
+
+Configure the machine issuer, subject, account, application, deployment and `kid` to match
+the backend registration. `MAXX_AI_MACHINE_PRIVATE_KEY_PATH` must point to a protected local
+RSA private-key file (2048 bits minimum) **outside the web root**. The corresponding public key
+must be explicitly trusted by the backend. Do not copy or reuse backend billing/receipt private
+keys as machine keys. There are no bundled keys, passwords or automatic demo-key discovery.
+
+Adjust `machine.permissions` in the published config to least privilege. Funding and receipt
+delivery require separate backend-designated subjects and permissions; permission strings alone
+do not grant authority. Machine tokens expire after 300 seconds (maximum 900).
+
+The built-in signer represents a provisioned service, not an end user. For human review, bind a
+trusted request-scoped `TokenProvider` carrying the backend-approved `human_actor_ref` and permission;
+never turn an arbitrary browser actor reference into a signed human-review identity. Token issuance,
+MaxxSATA SSO and user permission decisions remain with the host/identity owners.
+
+## Client usage
+
+```php
+use Maxx\Ai\Data\ActionContext;
+use Maxx\Ai\Data\AuthorizationRequest;
+use Maxx\Ai\GovernanceClient;
+
+// Perform the host application's tenant/user permission checks first.
+$client = app(GovernanceClient::class);
+$request = new AuthorizationRequest(
+    new ActionContext('tenant-1', 'actor-1', 'hrms', 'policy', 'interpret'),
+    'persisted-request-id', 'dummy-resource', 'dummy-text', 'local', 'dis-service',
+);
+$authorization = $client->authorize($request);
+$actionId = $authorization->string('logical_action_id');
+$status = $client->status($actionId);
+```
+
+All result objects expose `data` and a generated `correlationId`; `string($key)` requires an
+actual string and fails explicitly on malformed responses. Financial values stay decimal strings.
+The HTTP client sets `X-Correlation-ID`; backend persistence/echo of that header is not guaranteed.
+
+| Client | Methods |
+| --- | --- |
+| `GovernanceClient` | `scopeKeys`, `authorize`, `status`, `recover`, `complete`, `issueEntitlement`, `statement`, `deliverReceipt`, `billingEvents`, `acknowledge` |
+| `ExecutionClient` | `execute`, `status`, `receipt` |
+
+Completion takes a typed `CompletionRequest`, including event ID, outcome, evidence hash,
+jurisdiction, validator version and optional human/adopted-policy references. The SDK never
+marks a business result accepted or adopts a policy automatically.
+
+M1 execution uses a typed `ExecutionRequest` plus the **M2-issued authorization token**, not a
+machine bearer token. The caller must be the authorized executor and preserve the exact scoped
+IDs/token limits from the trusted M2 response. Do not send document content to M2 accounting.
+DIS delegation is not implemented because C08 is not approved.
+
+### Failure and retry behavior
+
+- **No automatic retries**, including reads, authorization, provider work and acknowledgments.
+- `TransportException` carries `outcomeUnknown` and correlation ID. A POST timeout may already
+  have committed work. `ApiException` exposes HTTP status, safe error code, correlation ID and
+  `outcomeUnknown` for server errors on POST.
+- `ProtocolException` marks malformed/oversized responses and whether a mutation's outcome
+  needs reconciliation. A successful HTTP status alone does not prove a valid operation result.
+- Persist request IDs and payloads before sending. Never reuse an idempotency key for changed
+  inputs. Conflicts are surfaced; the backend is the idempotency authority.
+- After an uncertain provider outcome, use known action/execution status and reconciliation;
+  never create a new attempt automatically. If the initial response is lost before its ID is
+  known, use the backend's documented idempotency/reconciliation procedure; the SDK does not
+  invent an unavailable lookup-by-key endpoint.
+- Redirects are refused; TLS verification stays on. HTTP is allowed only for loopback.
+- The SDK does not log payloads, bearer tokens, private keys or raw backend errors. Do not log
+  full responses, fake request histories or signed tokens in host applications. Guzzle transport
+  exceptions are deliberately not chained because they retain sensitive request material.
+
+## Durable billing integration
+
+Publish and explicitly apply the optional **application-owned inbox** migration:
+
+```powershell
+php artisan vendor:publish --tag=maxx-ai-migrations
+php artisan migrate
+```
+
+Inspect migrations and select the intended database before running. If
+`billing.connection` is not the default connection, migrate the same named connection explicitly
+using the host's migration procedure. No central wallet/ledger or business tenant tables are created.
+Inbox downgrade refuses to delete evidence.
+
+In `config/maxx-ai.php`, set `billing.public_key_paths` to a map of trusted `kid` values to
+local **public** RSA PEM files. The issuer defaults to `maxx-m2`; audience/invoice owner must
+equal `machine.application_id`, and account must equal `machine.account_id`. Retain old public
+keys while their immutable billing events remain replayable. Tokens cannot supply their own keys.
+
+Bind your application's implementation of `Maxx\Ai\Billing\InvoiceHandler`:
+
+```php
+$this->app->bind(
+    \Maxx\Ai\Billing\InvoiceHandler::class,
+    \App\Billing\MaxxInvoiceHandler::class,
+);
+```
+
+`handle(BillingEvent $event): string` must:
+
+1. Resolve the verified account/action/tenant mapping to the correct local invoice customer.
+2. Create a local invoice line for `charge_finalized`, or a linked credit/debit adjustment for
+   `charge_adjustment`; preserve amounts as exact decimal strings.
+3. Use **the same database connection/transaction as the inbox** and add a unique event linkage.
+4. Return a stable invoice reference matching `[A-Za-z0-9_.:-]{1,255}`.
+5. Never make provider/payment/network calls inside the transaction. For external invoicing,
+   implement a host-owned durable outbox and reconciliation workflow instead.
+
+No default invoice handler exists: an SDK cannot safely guess your tax, approval or invoice rules.
+Do not call billing processing inside an existing database transaction.
+
+Processing locks a unique inbox event, rejects changed payload hashes, commits the host invoice
+reference, then acknowledges remotely. If acknowledgment fails, the local record remains and
+replay retries acknowledgment **without running the invoice handler again**. This is an atomic
+same-database guarantee, not a claim of exactly-once external network side effects.
+
+### Pull worker
+
+```powershell
+php artisan maxx-ai:billing-pull --limit=100 --max-pages=10
+```
+
+Schedule it using your application's scheduler and `withoutOverlapping()`. Each invocation starts
+from the oldest unacknowledged events, validates signed payloads and advances bounded opaque
+cursors. Failures propagate; the command never skips a failed invoice or writes a permanent
+cursor that could strand it.
+
+### Optional webhook
+
+The SDK deliberately registers no route. Register this controller in your host's API routes,
+outside browser session authentication/CSRF middleware and with appropriate ingress rate limits:
+
+```php
+Route::post('/integrations/maxx/billing', \Maxx\Ai\Laravel\BillingWebhookController::class);
+```
+
+Both `signed_event` and `delivery` are mandatory. The controller verifies the event plus the
+short-lived delivery envelope, pinned key, scope, expiry, event ID and exact backend payload hash
+before touching the inbox. Duplicate deliveries use the same durable event deduplication as polling.
+Configure the HTTPS destination with the backend owner. Add a reverse-proxy request-size limit.
+Keep `APP_DEBUG=false` on exposed receivers and prevent request-body capture in access/APM logs.
+
+## Tests and fakes
+
+```powershell
+composer install
+composer lint
+composer test
+composer audit
+php examples\fake-portals.php
+```
+
+For this Windows XAMPP installation, if PHP is not on PATH or ZIP is disabled:
+
+```powershell
+$env:PATH = "D:\XAMPP\php;" + $env:PATH
+$env:OPENSSL_CONF = "D:\XAMPP\apache\conf\openssl.cnf"
+php -d extension=zip C:\composer\composer.phar install
+```
+
+`FakeTransport` queues deterministic responses/exceptions, records calls for assertions and
+never falls through to the network. [The HRMS/CRM example](examples/fake-portals.php) uses the
+same package for both portals.
+
+The suite covers serialized requests against exported backend JSON schemas, JWT identity,
+signature/algorithm/key rotation, exact decimals, timeout/no-retry behavior, changed billing
+payloads, duplicate invoicing, transaction rollback, acknowledgment outage/replay, polling and
+webhook boundaries, including two concurrent PHP processes invoicing the same event once.
+Laravel integration tests use isolated SQLite, not a host application's data.
+PostgreSQL/MySQL multi-process lock behavior and real portal integrations still need staging evidence.
+
+The [CI workflow](.github/workflows/tests.yml) configures PHP 8.2/8.3/8.4 and locked/lowest
+dependency resolution. A configured workflow is not evidence that remote CI has run.
+
+Refresh exported schema snapshots only after reviewing the backend changes:
+
+```powershell
+php tools\sync-contracts.php "D:\XAMPP\htdocs\maxx-universal-ai-platform"
+composer test
+```
+
+[The provenance manifest](contracts/manifest.json) records each upstream schema path, original
+source SHA-256 and the SHA-256 of its LF-normalized SDK snapshot.
+Snapshots are provisional, not C01-C08 approval.
+
+### Local verification
+
+On PHP 8.2.12 with Laravel 12.70.0: **72 tests, 153 assertions passed**. PHP syntax checks,
+Composer strict validation, both fake portal examples and Composer dependency audit passed.
+No known dependency advisories were reported for the locked resolution. These results do not
+establish remote CI, live backend integration, or production acceptance.
+
+## Release gates and rollback
+
+Before an approved release: freeze contracts/identity and error semantics, audit actual HRMS/CRM
+PHP/Laravel baselines, run live machine/receiver tests and production-database concurrency tests,
+review tax/invoice and human-approval integration, rehearse outages/rollback, record baseline/release
+SHAs and reviewer acceptance, then publish/tag an immutable version. Do not remove the production
+gate merely to make a deployment start.
+
+Roll back the compatible package version while retaining the inbox and host invoice evidence.
+Never delete rows to bypass a billing conflict. No GitHub remote, public publication, release tag,
+host portal deployment or production acceptance is implied by creating this local repository.

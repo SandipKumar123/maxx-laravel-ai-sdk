@@ -1,0 +1,80 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "accepted",
+        "rejected",
+        "partial",
+        "abandoned"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "evidence_hash": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Evidence Hash",
+      "type": "string"
+    },
+    "jurisdiction": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Jurisdiction",
+      "type": "string"
+    },
+    "human_actor_ref": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Human Actor Ref"
+    },
+    "adopted_policy_reference": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Adopted Policy Reference"
+    },
+    "validator_version": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Validator Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "outcome",
+    "evidence_hash",
+    "jurisdiction",
+    "validator_version"
+  ],
+  "title": "CompletionInput",
+  "type": "object"
+}

@@ -1,0 +1,95 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "iss": {
+      "title": "Iss",
+      "type": "string"
+    },
+    "aud": {
+      "const": "maxx-m2",
+      "title": "Aud",
+      "type": "string"
+    },
+    "sub": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Sub",
+      "type": "string"
+    },
+    "iat": {
+      "title": "Iat",
+      "type": "integer"
+    },
+    "exp": {
+      "title": "Exp",
+      "type": "integer"
+    },
+    "account_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Account Id",
+      "type": "string"
+    },
+    "application_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Application Id",
+      "type": "string"
+    },
+    "deployment_id": {
+      "maxLength": 255,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Deployment Id",
+      "type": "string"
+    },
+    "human_actor_ref": {
+      "anyOf": [
+        {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Human Actor Ref"
+    },
+    "permissions": {
+      "items": {
+        "enum": [
+          "actions:execute",
+          "entitlements:issue",
+          "receipts:deliver",
+          "billing:read",
+          "billing:ack",
+          "completion:report",
+          "human:review"
+        ],
+        "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Permissions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "iss",
+    "aud",
+    "sub",
+    "iat",
+    "exp",
+    "account_id",
+    "application_id",
+    "deployment_id",
+    "permissions"
+  ],
+  "title": "MachineClaims",
+  "type": "object"
+}

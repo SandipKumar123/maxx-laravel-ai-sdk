@@ -1,0 +1,39 @@
+{
+    "name": "maxx/laravel-ai-sdk",
+    "description": "Laravel integration for Maxx Universal AI governance APIs",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "guzzlehttp/guzzle": "^7.9",
+        "firebase/php-jwt": "^7.2.1",
+        "illuminate/support": "^12.0",
+        "illuminate/database": "^12.0",
+        "illuminate/http": "^12.0"
+    },
+    "require-dev": {
+        "opis/json-schema": "^2.6",
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {"Maxx\\Ai\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"Maxx\\Ai\\Tests\\": "tests/"}
+    },
+    "extra": {
+        "laravel": {"providers": ["Maxx\\Ai\\Laravel\\MaxxAiServiceProvider"]}
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "@php tools/lint.php"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": false
+    }
+}
