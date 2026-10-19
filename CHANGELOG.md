@@ -10,6 +10,9 @@
 - Optional host-scoped inbox migration, transactional invoicing hook, replay-safe acknowledgment,
   bounded polling command, opt-in webhook controller and deterministic transport fakes.
 - Backend-schema compatibility tests, Laravel integration tests and PHP matrix CI.
+- Opt-in real PHP-to-FastAPI HTTP qualification with isolated PostgreSQL accounting/inbox schemas,
+  polling/webhook concurrency, unknown-outcome protection and acknowledgment-response-loss replay.
+- Normalize Python scientific decimal strings such as `0E-12` exactly for billing amounts.
 
 Only `m1-dummy-v1` and `m2-dummy-v1` are supported. Production use is rejected.
 No tagged release, approved C01-C08 compatibility, live portal integration or human acceptance is claimed.

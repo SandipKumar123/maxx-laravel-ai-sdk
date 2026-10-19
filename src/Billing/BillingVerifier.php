@@ -73,7 +73,7 @@ final class BillingVerifier
                 }
                 Validate::decimal(str_starts_with($amount, '-') ? substr($amount, 1) : $amount);
             } else {
-                Validate::storedDecimal($amount);
+                $amount = Validate::storedDecimal($amount);
                 Validate::storedDecimal($claims['quantity'] ?? '');
                 if (($claims['unit'] ?? null) !== 'credits' || !is_array($claims['details'] ?? null)) {
                     throw new VerificationException();

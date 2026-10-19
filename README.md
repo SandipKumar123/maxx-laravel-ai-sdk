@@ -227,7 +227,8 @@ signature/algorithm/key rotation, exact decimals, timeout/no-retry behavior, cha
 payloads, duplicate invoicing, transaction rollback, acknowledgment outage/replay, polling and
 webhook boundaries, including two concurrent PHP processes invoicing the same event once.
 Laravel integration tests use isolated SQLite, not a host application's data.
-PostgreSQL/MySQL multi-process lock behavior and real portal integrations still need staging evidence.
+The separate live qualification below also tests PostgreSQL concurrent polling/webhook processing.
+MySQL and actual host-application integrations still need their own evidence.
 
 The [CI workflow](.github/workflows/tests.yml) configures PHP 8.2/8.3/8.4 and locked/lowest
 dependency resolution. A configured workflow is not evidence that remote CI has run.
@@ -245,10 +246,71 @@ Snapshots are provisional, not C01-C08 approval.
 
 ### Local verification
 
-On PHP 8.2.12 with Laravel 12.70.0: **72 tests, 153 assertions passed**. PHP syntax checks,
+On PHP 8.2.12 with Laravel 12.70.0: **80 tests, 161 assertions passed**. PHP syntax checks,
 Composer strict validation, both fake portal examples and Composer dependency audit passed.
 No known dependency advisories were reported for the locked resolution. These results do not
-establish remote CI, live backend integration, or production acceptance.
+establish remote CI or production acceptance.
+
+### Real backend and PostgreSQL qualification
+
+An opt-in backend test, `tests/integration/test_laravel_sdk_live.py`, drives this SDK fixture
+over **real loopback HTTP**, not a mocked HTTP client. It uses the actual FastAPI M1/M2 routers,
+ephemeral RSA identities, the dummy provider, real PostgreSQL accounting, and the SDK's actual
+published inbox migration in a separate PostgreSQL host schema.
+
+Verified on 19 October 2026 using PostgreSQL 17.11, PHP 8.2.12, Laravel 12.70.0 and
+an isolated Python 3.13.16 runtime:
+
+- Authorization and execution replay retain the original IDs; changed authorization payloads fail.
+- Cross-account access, missing human-adoption evidence and jurisdiction mismatches fail.
+- Accepted/rejected completions and duplicate receipt settlement retain durable accounting evidence.
+- Rejected work emits a zero charge without discarding consumed provider expense.
+- Real Python decimal strings such as `0E-12` are normalized exactly, without floats.
+- Unknown provider outcomes keep their hold and deny recovery; no new provider attempt is created.
+- Signed billing pages and opaque cursors work with the actual backend.
+- A real remote acknowledgment followed by a deliberately lost response replays without reinvoicing.
+- Two PHP processes race polling versus a Python-signed webhook for one PostgreSQL inbox event:
+  one local invoice effect is committed. Invalid delivery signatures are rejected.
+- Conflicting acknowledgment references fail; acknowledged events disappear from billing pull.
+- The test server stops and generated schemas, credentials, keys and signed temporary evidence
+  are removed after the run. Existing demo/customer records are not altered.
+
+Run from the **backend** directory with a working project Python environment:
+
+```powershell
+$env:MAXX_UAI_RUN_DB_TESTS = "true"
+$env:MAXX_UAI_RUN_SDK_TESTS = "true"
+$env:MAXX_UAI_SDK_PATH = "D:\XAMPP\htdocs\maxx-laravel-ai-sdk"
+$env:MAXX_UAI_SDK_PHP = "D:\XAMPP\php\php.exe"
+$env:MAXX_UAI_SDK_PHP_PGSQL_EXTENSION = "true"
+.\.venv\Scripts\python.exe -m pytest tests\integration\test_laravel_sdk_live.py -q -p no:cacheprovider
+```
+
+PHP needs `pdo_pgsql`; the extension flag enables it only for the test child processes. Omit
+the flag if already enabled. The backend's existing isolated-database fixture uses
+`MAXX_UAI_TEST_DATABASE_URL` when supplied, otherwise the configured local database; the database
+role needs permission to create temporary schemas. No deployment migrations are applied.
+The SDK repository is required only when this test is explicitly enabled.
+
+This verifies a freshly started isolated instance of the real backend, not your existing running
+demo server or a live AI provider. The test invoice handler creates synthetic invoice evidence:
+it is not an HRMS/CRM tax/invoicing implementation. Local PostgreSQL concurrency success does not
+qualify another database/version, a production deployment, crash recovery, or operational load.
+
+The existing project `.venv` was found unusable during this run: `C:\Python313` was missing
+its standard library. Verification used an isolated managed Python 3.13 runtime with the unchanged
+backend lockfile, rather than repairing shared Python or overwriting the project environment.
+
+### Remaining integration checklist
+
+| Area | Current evidence / remaining requirement |
+| --- | --- |
+| Real SDK-to-backend integration | Passed locally against the real isolated FastAPI server and PostgreSQL, with the dummy provider. |
+| HRMS/CRM installation | Requires the actual host repositories and their PHP/Laravel compatibility audit. |
+| Host invoice handler | Synthetic PostgreSQL handler verified; actual customer/tax/invoice mapping remains application-owned. |
+| Approved production contracts and SSO | Still requires owner-approved contracts, real identity integration and acceptance. |
+| Database concurrency | Local PostgreSQL 17.11 polling/webhook race passed; target deployment, failure/load and any MySQL qualification remain. |
+| GitHub publication / release | No remote publication or release tag; owner/visibility and release approval remain required. |
 
 ## Release gates and rollback
 

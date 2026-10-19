@@ -37,6 +37,25 @@ final class Validate
 
     public static function storedDecimal(string $value): string
     {
+        if (preg_match('/\A(0|[1-9][0-9]*)(?:\.([0-9]+))?[eE]([+-]?[0-9]{1,3})\z/', $value, $parts)) {
+            $exponent = (int) $parts[3];
+            if ($exponent < -12 || $exponent > 37 || strlen($parts[1]) > 38 || strlen($parts[2]) > 12) {
+                throw new \InvalidArgumentException('Decimal exponent exceeds storage bounds.');
+            }
+            $digits = $parts[1].$parts[2];
+            $point = strlen($parts[1]) + $exponent;
+            if ($point <= 0) {
+                $value = '0.'.str_repeat('0', -$point).$digits;
+            } elseif ($point >= strlen($digits)) {
+                $value = $digits.str_repeat('0', $point - strlen($digits));
+            } else {
+                $value = substr($digits, 0, $point).'.'.substr($digits, $point);
+            }
+            $value = ltrim($value, '0');
+            if ($value === '' || str_starts_with($value, '.')) {
+                $value = '0'.$value;
+            }
+        }
         if (!preg_match('/\A(?:0|[1-9][0-9]{0,37})(?:\.[0-9]{1,12})?\z/', $value)) {
             throw new \InvalidArgumentException('Expected a nonnegative Numeric(50,12) decimal string.');
         }

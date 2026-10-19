@@ -39,6 +39,24 @@ final class SecurityTest extends TestCase
         self::assertSame('charge_finalized', $event->eventType);
     }
 
+    #[DataProvider('pythonDecimalStrings')]
+    public function testBackendScientificDecimalStringsAreNormalizedExactly(string $wire, string $expected): void
+    {
+        $verifier = new BillingVerifier(['current' => Keys::pair()['public']], 'customer-1', 'hrms-local');
+        self::assertSame($expected, $verifier->event(Keys::event(['amount' => $wire]))->amount);
+    }
+
+    public static function pythonDecimalStrings(): array
+    {
+        return [
+            ['0E-12', '0.000000000000'],
+            ['1E-12', '0.000000000001'],
+            ['1.23E+3', '1230'],
+            ['0E+3', '0'],
+            ['9E+37', '9'.str_repeat('0', 37)],
+        ];
+    }
+
     public function testRotationRetainsOldKeysAndRejectsRemovedKeys(): void
     {
         $verifier = new BillingVerifier([
@@ -65,6 +83,7 @@ final class SecurityTest extends TestCase
             ['contract_version' => 'production-v1'], ['invoice_owner_id' => 'crm'],
             ['iat' => time() + 3600], ['iat' => '1'], ['amount' => 1.25],
             ['amount' => '-1'], ['currency' => 'usd'], ['event_type' => 'unknown'],
+            ['amount' => '1E-13'], ['amount' => '1E+38'], ['amount' => '1E+999'],
             ['event_id' => '../event'], ['exp' => 1],
             ['event_type' => 'charge_adjustment', 'amount_delta' => '--1', 'adjustment_id' => 'adjustment',
                 'reason' => 'approved_credit', 'evidence_hash' => str_repeat('0', 64), 'original_charge' => '1'],
