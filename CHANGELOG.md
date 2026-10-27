@@ -2,6 +2,11 @@
 
 ## Unreleased - 0.1.0 development
 
+- Read-only upstream contract parity/provenance checks with LF/CRLF support and regression tests.
+- Locked and Laravel 12 latest/lowest CI matrices with retained test evidence and pinned
+  cross-repository contract parity. Joint real-backend qualification is wired in the platform.
+- Laravel 11 qualification remains blocked by Composer security advisories; owner selected
+  retaining Laravel 12 support and an approved upgrade path for incompatible hosts.
 - Optional platform-issued, server-scoped SDK credential mode; existing machine JWT mode
   remains the default. Credential creation, expiry, rotation and revocation are backend-owned.
 - Real HTTP qualification now also verifies issued-token access, human-review denial and revocation.

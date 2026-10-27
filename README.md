@@ -15,9 +15,11 @@ contracts and human acceptance are still required.
 ## Requirements and scope
 
 - PHP 8.2+ with OpenSSL, JSON and mbstring; Laravel 12.
-- No PHP/Laravel host application was available for audit. PHP 8.2.12 is available locally.
-  Host applications must confirm their versions before installation; Laravel 10/11 support
-  is not claimed.
+- Host applications must confirm their actual lockfile/runtime before installation; Laravel
+  10/11 support is not claimed. Laravel 11 qualification attempted on 27 October 2026 failed
+  Composer resolution because matching framework releases were blocked by security advisories.
+  Advisory blocking was not disabled. The owner selected retaining Laravel 12 support; Laravel 11
+  hosts require an approved upgrade before integration, not relaxed package constraints.
 - Backend machine identity and registered account/application/deployment, matching approved
   local/test key configuration and enabled M1/M2 runtimes.
 - The SDK does not implement DIS, replicate users/tenant tables, provision credits automatically,
@@ -269,8 +271,28 @@ Laravel integration tests use isolated SQLite, not a host application's data.
 The separate live qualification below also tests PostgreSQL concurrent polling/webhook processing.
 MySQL and actual host-application integrations still need their own evidence.
 
-The [CI workflow](.github/workflows/tests.yml) configures PHP 8.2/8.3/8.4 and locked/lowest
-dependency resolution. A configured workflow is not evidence that remote CI has run.
+The [CI workflow](.github/workflows/tests.yml) tests the locked baseline and Laravel 12
+latest/lowest dependency resolution on PHP 8.2/8.3/8.4. Every job runs the full suite, including
+invoice concurrency, and uploads JUnit evidence; resolution jobs also retain their lockfile.
+A configured workflow is not evidence that remote CI has run.
+
+The contract-parity job checks this SDK candidate against an immutable backend revision.
+Repository variables `MAXX_UAI_BACKEND_REPOSITORY` and `MAXX_UAI_BACKEND_SHA` select the producer;
+defaults are `SandipKumar123/maxx-universal-ai-platform` at
+`09da738a138b1a05be7e33abe75e5f97c83a1396`. Update both when changing the approved producer.
+For a private cross-repository checkout, configure a read-only `CROSS_REPO_READ_TOKEN` secret
+with access to the producer; the default workflow token normally cannot read another private
+repository. No personal token belongs in source.
+
+Check upstream snapshots without modifying them:
+
+```powershell
+php tools\sync-contracts.php "C:\xampp\htdocs\maxx-universal-ai-platform" --check
+```
+
+The check fails on missing/changed schemas or invalid provenance. Only LF/CRLF differences
+are accepted; JSON/schema changes require explicit review. Matching snapshots demonstrate
+parity, not automatic backward compatibility or approval of an incompatible contract.
 
 Refresh exported schema snapshots only after reviewing the backend changes:
 
@@ -285,10 +307,17 @@ Snapshots are provisional, not C01-C08 approval.
 
 ### Local verification
 
-On PHP 8.2.12 with Laravel 12.70.0: **80 tests, 161 assertions passed**. PHP syntax checks,
-Composer strict validation, both fake portal examples and Composer dependency audit passed.
-No known dependency advisories were reported for the locked resolution. These results do not
-establish remote CI or production acceptance.
+On 27 October 2026, the working-tree candidate on PHP 8.5.12 with locked Laravel 12.70.0
+passed **87 tests, 176 assertions**, including read-only upstream parity checks, changed/missing
+schema rejection, and LF/CRLF handling. This is separate from historical PHP 8.2 results and
+does not establish the configured remote PHP matrix, a tagged release, or production acceptance.
+
+Separate temporary package copies also passed all 87 tests / 176 assertions with Laravel
+12.70.1 (latest resolution) and 12.69.0 (secure lowest resolution). The lowest resolution emitted
+two PHP 8.5 deprecations from Testbench's bundled database configuration; the locked/latest
+runs were clean. No vendor files or advisory policies were changed to suppress these notices.
+Composer strict validation, PHP lint, locked dependency audit, and the eight-schema upstream
+parity check passed. Both workflow files passed actionlint.
 
 ### Real backend and PostgreSQL qualification
 
@@ -331,10 +360,23 @@ the flag if already enabled. The backend's existing isolated-database fixture us
 role needs permission to create temporary schemas. No deployment migrations are applied.
 The SDK repository is required only when this test is explicitly enabled.
 
+The platform's `Pinned Laravel SDK qualification` workflow runs this test with PostgreSQL 16
+and PHP 8.2, alongside parity, lint, dependency audit and the standalone suite. After committing
+both candidates, dispatch it at the intended platform revision with `sdk_repository` and the
+full 40-character `sdk_sha`. It records the actual platform/SDK SHAs and rejects a skipped
+live test. Private SDK checkout requires the platform's read-only `CROSS_REPO_READ_TOKEN`.
+It does not deploy services, use live AI, or qualify HRMS/CRM legal invoicing.
+
 This verifies a freshly started isolated instance of the real backend, not your existing running
 demo server or a live AI provider. The test invoice handler creates synthetic invoice evidence:
 it is not an HRMS/CRM tax/invoicing implementation. Local PostgreSQL concurrency success does not
 qualify another database/version, a production deployment, crash recovery, or operational load.
+
+On 27 October 2026 the changed working-tree SDK candidate passed this real HTTP/PHP test
+against the local platform candidate using PHP 8.5.12 and PostgreSQL 18.6: **1 passed, zero
+skipped**. Validation created and removed a separate randomly named database; the configured
+application database was not migrated or used for test records. This is local evidence, not a
+remote CI run or release acceptance.
 
 The existing project `.venv` was found unusable during this run: `C:\Python313` was missing
 its standard library. Verification used an isolated managed Python 3.13 runtime with the unchanged
@@ -349,7 +391,7 @@ backend lockfile, rather than repairing shared Python or overwriting the project
 | Host invoice handler | Synthetic PostgreSQL handler verified; actual customer/tax/invoice mapping remains application-owned. |
 | Approved production contracts and SSO | Still requires owner-approved contracts, real identity integration and acceptance. |
 | Database concurrency | Local PostgreSQL 17.11 polling/webhook race passed; target deployment, failure/load and any MySQL qualification remain. |
-| GitHub publication / release | No remote publication or release tag; owner/visibility and release approval remain required. |
+| GitHub publication / release | Local Git remote is configured; publication of this candidate, passing remote workflows and an approved immutable release tag remain required. |
 
 ## Release gates and rollback
 
@@ -360,5 +402,5 @@ SHAs and reviewer acceptance, then publish/tag an immutable version. Do not remo
 gate merely to make a deployment start.
 
 Roll back the compatible package version while retaining the inbox and host invoice evidence.
-Never delete rows to bypass a billing conflict. No GitHub remote, public publication, release tag,
-host portal deployment or production acceptance is implied by creating this local repository.
+Never delete rows to bypass a billing conflict. A configured Git remote or local passing tests
+do not establish public publication, a release tag, host deployment or production acceptance.

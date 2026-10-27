@@ -14,7 +14,7 @@ jobs:
       fail-fast: false
       matrix:
         php: ['8.2', '8.3', '8.4']
-        dependencies: [locked, lowest]
+        dependencies: [locked]
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -26,8 +26,76 @@ jobs:
       - run: composer validate --strict
       - if: matrix.dependencies == 'locked'
         run: composer install --no-interaction --prefer-dist --no-progress
-      - if: matrix.dependencies == 'lowest'
-        run: composer update --prefer-lowest --prefer-stable --no-interaction --no-progress
       - run: composer lint
-      - run: composer test
+      - run: composer test -- --log-junit test-results.xml
       - run: composer audit
+      - name: Retain locked-suite evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-php-${{ matrix.php }}-${{ matrix.dependencies }}
+          path: test-results.xml
+
+  contract-parity:
+    runs-on: ubuntu-latest
+    env:
+      BACKEND_SHA: ${{ vars.MAXX_UAI_BACKEND_SHA || '09da738a138b1a05be7e33abe75e5f97c83a1396' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: sdk
+      - name: Require immutable backend revision
+        run: '[[ "$BACKEND_SHA" =~ ^[0-9a-f]{40}$ ]]'
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.MAXX_UAI_BACKEND_REPOSITORY || 'SandipKumar123/maxx-universal-ai-platform' }}
+          ref: ${{ env.BACKEND_SHA }}
+          path: backend
+          token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: Verify pinned contract producer and consumer
+        run: |
+          test "$(git -C backend rev-parse HEAD)" = "$BACKEND_SHA"
+          git -C sdk rev-parse HEAD
+          php sdk/tools/sync-contracts.php backend --check
+
+  laravel-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+        laravel: ['12']
+        dependencies: [latest, lowest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: openssl, mbstring, pdo_sqlite, dom, xml
+          coverage: none
+          tools: composer:v2
+      - name: Resolve selected Laravel major
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          DEPENDENCIES: ${{ matrix.dependencies }}
+        run: |
+          if [ "$LARAVEL" = "11" ]; then TESTBENCH=9; else TESTBENCH=10; fi
+          FLAGS=""
+          if [ "$DEPENDENCIES" = "lowest" ]; then FLAGS="--prefer-lowest"; fi
+          composer update --with "laravel/framework:^${LARAVEL}.0" --with "orchestra/testbench:^${TESTBENCH}.0" $FLAGS --prefer-stable --no-interaction --prefer-dist
+      - run: composer show laravel/framework
+      - run: composer lint
+      - run: composer test -- --log-junit test-results.xml
+      - run: composer audit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sdk-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-${{ matrix.dependencies }}
+          path: |
+            test-results.xml
+            composer.lock
