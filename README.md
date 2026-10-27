@@ -2,6 +2,10 @@
 
 Standalone Composer package: **`maxx/laravel-ai-sdk`**.
 
+For step-by-step host installation, access, billing, troubleshooting and rollback, see the
+[user manual](USER-MANUAL.md). The Universal AI dashboard footer also provides a bundled
+browser-readable SDK guide that opens in a new tab.
+
 This is a library, not a web application or standalone server. Do not expose this directory
 through Apache. A deny-all `.htaccess` is included for XAMPP; ensure the server honors it or
 exclude the directory from the document root.
