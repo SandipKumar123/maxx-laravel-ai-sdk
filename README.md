@@ -33,6 +33,23 @@ contracts and human acceptance are still required.
 
 ## Install in an existing Laravel application
 
+### Command quick reference
+
+Run commands from the **Laravel host application**, not this SDK checkout.
+Configure the Composer path/private repository first as described below.
+
+| Task | Commands in order | Result |
+| --- | --- | --- |
+| Add SDK and module | `composer require maxx/laravel-ai-sdk:"dev-main"` then `php artisan maxx-ai:install` | Composer installs the SDK under `vendor`; Artisan copies the module, registers its provider, publishes missing configuration and records an installation manifest. |
+| Complete host setup | `composer dump-autoload`, `php artisan config:clear`, `php artisan route:clear` | Refresh host autoloading and clear stale configuration/routes. Review the regional database before separately running the module migration tool below. |
+| Remove module and SDK | `php artisan maxx-ai:uninstall` then `composer remove maxx/laravel-ai-sdk` | Artisan safely removes an unchanged generated module first; Composer then removes the SDK dependency if no other package requires it. |
+
+Do not remove the Composer package first: that also removes the Artisan uninstall command.
+An existing regional module is not an installer-owned module unless it has its original
+installation manifest. Neither install nor uninstall overwrites or deletes such a module.
+These commands are implemented in this source tree; use a package revision containing them.
+They do not imply that this development version has been published or deployed.
+
 This repository is separate from the Python backend. Until a private VCS release is published,
 add a Composer path repository to the **host application's** `composer.json`:
 

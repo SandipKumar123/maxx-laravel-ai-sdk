@@ -1,5 +1,34 @@
 # AI Governance
 
+## Installation and removal
+
+From a compatible Laravel HRMS host with the Composer repository configured:
+
+```powershell
+composer require maxx/laravel-ai-sdk:"dev-main"
+php artisan maxx-ai:install
+composer dump-autoload
+php artisan config:clear
+php artisan route:clear
+# Back up and review the intended regional database first:
+php Modules\AiGovernance\Tools\install.php
+```
+
+The Artisan installer copies this module, registers its provider, publishes missing SDK
+configuration and creates `bootstrap/maxx-ai-installation.json`. Existing module directories
+are refused; it does not upgrade an original HRMS module in place. Configure permissions
+and the six-field SDK connection separately. Business call sites and sidebar links remain
+host-owned. The migration tool is a separate database-changing step, not part of Artisan
+installation.
+
+To remove an unchanged generated module and then the package:
+
+```powershell
+php artisan maxx-ai:uninstall
+# Continue only after successful uninstall and review of remaining host SDK dependencies:
+composer remove maxx/laravel-ai-sdk
+```
+
 For an SDK-generated installation, run `php artisan maxx-ai:uninstall` before
 `composer remove maxx/laravel-ai-sdk`. Uninstall only removes an unchanged module tracked by
 its original `bootstrap/maxx-ai-installation.json` manifest; added/modified/missing files

@@ -41,11 +41,32 @@ or start workers. Publicly serve only the host's public directory.
 
 ### Optional regional AI Governance module
 
-Run `php artisan maxx-ai:install` to copy the bundled India HRMS module to
-`Modules/AiGovernance`, register its provider, and publish missing SDK configuration.
+After the Composer require command above, run:
+
+```powershell
+php artisan maxx-ai:install
+composer dump-autoload
+php artisan config:clear
+php artisan route:clear
+```
+
+`maxx-ai:install` copies the bundled India HRMS module to
+`Modules/AiGovernance`, registers its provider, and publishes missing SDK configuration.
 Existing module files are never overwritten, and existing configuration is preserved.
+It also creates `bootstrap/maxx-ai-installation.json`; retain this original file with the
+module so a later uninstall can verify which files were installed.
 See [module installation](README.md#install-the-regional-hrms-aigovernance-module) for the
 host prerequisites, Composer autoload mapping, and regional migration steps.
+
+After backing up and confirming the target regional database, apply only the module migrations:
+
+```powershell
+php Modules\AiGovernance\Tools\install.php
+```
+
+The tool checks the regional mapping (`in -> hrms_in`, `ae -> hrms_ae`, `us -> hrms_us`).
+Then configure authorized access and the six-field SDK Connection before opening
+`/ai-governance`. No sidebar link is created by the SDK installer.
 
 This installs module source, not a provisioned backend or a generic Laravel dashboard.
 The host must supply its tenant scope, regional middleware, permission system and admin
@@ -62,11 +83,26 @@ Sanctum must already be configured in the host; SDK-only installation does not r
 
 ### Removing the generated module and package
 
-Run `php artisan maxx-ai:uninstall` **before** `composer remove maxx/laravel-ai-sdk`.
+Run these commands from the host application **in this order**:
+
+```powershell
+php artisan maxx-ai:uninstall
+# Continue only after a successful uninstall and review of remaining SDK integrations:
+composer remove maxx/laravel-ai-sdk
+```
+
+Composer alone removes its package under `vendor`, not the generated module. Removing it
+first also removes the uninstall command. For an SDK-only host that never installed the
+module, review SDK references and use Composer removal directly.
+
 Uninstall confirms removal and only deletes an unchanged installer-owned module, unregistering
 its provider and clearing configuration/route caches. Use `--yes` for an approved unattended
 deployment. Configuration, environment settings, credentials and database evidence are retained.
 Modified modules and modules without their original installation manifest require host review.
+Do not proceed to Composer removal after a refused uninstall until the module/provider
+dependencies have been resolved. There is no destructive force-removal option. No migration
+rollback or data purge is performed. Remove remaining sidebar links, schedules and business
+SDK references through the host deployment process, then restart long-lived workers.
 See [safe uninstall](README.md#safe-uninstall-before-composer-removal) for all safeguards
 and the required review of remaining business call sites before removing the SDK.
 

@@ -2,6 +2,10 @@
 
 ## Documentation - 27 October 2026
 
+- Aligned the README, host/operator manuals and bundled module instructions with the
+  install/setup/uninstall command order, original manifest ownership, preserved data,
+  existing-module safeguards and HRMS-style API. Clarified that source changes are not
+  proof of publication or deployment to regional hosts.
 - Added `docs/USER-MANUAL.md` for existing India/USA/UAE HRMS consumers: six-field connection verification, credential rotation, M2/M1 execution, uncertainty recovery, usage versus billing, and the host invoice-handler boundary.
 - Documented regional locked revision versus standalone SDK source revision and local/test-only acceptance limits. No SDK runtime behavior or production contract changed in this documentation update.
 
