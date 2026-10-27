@@ -39,6 +39,37 @@ php artisan vendor:publish --tag=maxx-ai-config
 release when available. Installation does not run migrations, register routes, fund accounts,
 or start workers. Publicly serve only the host's public directory.
 
+### Optional regional AI Governance module
+
+Run `php artisan maxx-ai:install` to copy the bundled India HRMS module to
+`Modules/AiGovernance`, register its provider, and publish missing SDK configuration.
+Existing module files are never overwritten, and existing configuration is preserved.
+See [module installation](README.md#install-the-regional-hrms-aigovernance-module) for the
+host prerequisites, Composer autoload mapping, and regional migration steps.
+
+This installs module source, not a provisioned backend or a generic Laravel dashboard.
+The host must supply its tenant scope, regional middleware, permission system and admin
+layout. No migrations, credentials, permissions, billing or business-feature hooks are
+created automatically. Existing regional hosts already containing this module should not
+run the installer as an upgrade. Review and merge module updates through their deployment
+process instead.
+
+The installed module also provides [JSON APIs](README.md#ai-governance-api) under
+`/api/ai-governance`, following the HRMS module API/controller conventions. They use existing
+HRMS Sanctum bearer tokens and regional permissions, not the backend Client Access secret
+as caller authentication. Connection PUT verifies before saving without a browser session.
+Sanctum must already be configured in the host; SDK-only installation does not require it.
+
+### Removing the generated module and package
+
+Run `php artisan maxx-ai:uninstall` **before** `composer remove maxx/laravel-ai-sdk`.
+Uninstall confirms removal and only deletes an unchanged installer-owned module, unregistering
+its provider and clearing configuration/route caches. Use `--yes` for an approved unattended
+deployment. Configuration, environment settings, credentials and database evidence are retained.
+Modified modules and modules without their original installation manifest require host review.
+See [safe uninstall](README.md#safe-uninstall-before-composer-removal) for all safeguards
+and the required review of remaining business call sites before removing the SDK.
+
 ## 2. Configure a deployment credential
 
 A platform administrator uses Universal AI **Client Access** to register the scope and issue

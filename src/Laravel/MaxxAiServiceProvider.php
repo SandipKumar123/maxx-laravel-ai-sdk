@@ -98,7 +98,7 @@ final class MaxxAiServiceProvider extends ServiceProvider
                 => database_path('migrations/2026_10_19_000001_create_maxx_ai_billing_inbox.php'),
         ], 'maxx-ai-migrations');
         if ($this->app->runningInConsole()) {
-            $this->commands([PullBillingCommand::class]);
+            $this->commands([InstallCommand::class, UninstallCommand::class, PullBillingCommand::class]);
         }
     }
 

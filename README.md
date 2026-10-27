@@ -28,7 +28,8 @@ contracts and human acceptance are still required.
   local/test key configuration and enabled M1/M2 runtimes.
 - The SDK does not implement DIS, replicate users/tenant tables, provision credits automatically,
   adopt HRMS policies, calculate tax or create legal invoices.
-- HRMS/CRM business adapters (03-B/03-C) remain in their own host repositories.
+- HRMS/CRM business call sites remain in their own host repositories. An optional copy of
+  the regional HRMS AI Governance module is bundled for explicit installation.
 
 ## Install in an existing Laravel application
 
@@ -61,6 +62,123 @@ when a release exists; `dev-main` is only a local development installation.
 Copy the names from [the environment example](examples/.env.example) into your host environment.
 Set `APP_ENV=local` or `testing`; never change a production application to `local` to bypass the gate.
 The package is disabled by default.
+
+### Install the regional HRMS AiGovernance module
+
+For a compatible regional HRMS host, the optional installation flow is:
+
+```text
+composer require maxx/laravel-ai-sdk
+    -> vendor/maxx/laravel-ai-sdk/
+php artisan maxx-ai:install
+    -> Modules/AiGovernance/
+```
+
+The Composer command requires an accessible package repository and a version matching the
+host's stability settings. There is no tagged/public release claimed here. For the local path
+repository above, continue using `composer require maxx/laravel-ai-sdk:"dev-main"`.
+
+The installer copies the complete module from `stubs/AiGovernance`, based on
+`maxx-hrms-india/Modules/AiGovernance` on 27 October 2026, with an additional HRMS-style JSON API.
+It includes the web/API controllers, Blade dashboard, routes, models, services, five migrations,
+and regional migration tool.
+It registers the provider in `bootstrap/providers.php` without changing existing provider order
+and publishes `config/maxx-ai.php` only if absent. Existing module directories are refused,
+including repeat installations; there is deliberately no destructive `--force` option.
+Installed files are host-owned: subsequent SDK updates do not overwrite them.
+
+**This is an HRMS-specific module, not a standalone UI for arbitrary Laravel applications.**
+The host must already provide `App\Support\ScopeContext`, the regional `App\Models\User`
+contract, `regional.scope` middleware, Spatie permissions, the `admin.layouts.base` layout,
+and `app.jurisdiction` (`in`, `ae`, or `us`). Its existing `Modules\\` PSR-4 mapping must point
+to `Modules/`; if missing, add it to the host's Composer autoload configuration and run
+`composer dump-autoload` before installing. The original regional application registers
+providers explicitly; the installer follows that same pattern rather than depending on
+nwidart module discovery or enabling other modules.
+
+After installation:
+
+```powershell
+composer dump-autoload
+php artisan config:clear
+php artisan route:clear
+# Review the target regional database before running:
+php Modules\AiGovernance\Tools\install.php
+```
+
+The regional tool validates `in -> hrms_in`, `ae -> hrms_ae`, or `us -> hrms_us`, then applies
+only this module's migrations. **The Artisan installer does not migrate, change `.env`,
+create credentials, grant permissions, add sidebar links, wire business-module call sites,
+configure billing, or contact the AI backend.** The module supplies no legal invoice handler;
+the existing billing integration below remains host-owned. Configure permissions and SDK
+Connection before using `/ai-governance`. SDK execution still requires local/testing opt-in;
+installing the module does not permit production execution.
+
+### Safe uninstall before Composer removal
+
+Composer owns `vendor/maxx/laravel-ai-sdk`, not the generated host module. Remove the module
+**before** removing the package:
+
+```powershell
+php artisan maxx-ai:uninstall
+# After successful uninstall and review of remaining host integrations:
+composer remove maxx/laravel-ai-sdk
+```
+
+For approved non-interactive deployments use `php artisan maxx-ai:uninstall --yes`.
+The installer records original file hashes and directories in
+`bootstrap/maxx-ai-installation.json`. Keep this manifest with the installed host module;
+uninstall compares against the original installation, not the current SDK stubs, so SDK
+upgrades do not invalidate unchanged installed copies.
+
+Uninstall requires confirmation, refuses modified/added/missing files or directories and
+symbolic links, preserves other modules and provider ordering, clears route/config caches,
+then removes `Modules/AiGovernance`, its provider registration and installation manifest.
+It preserves `config/maxx-ai.php`, `.env`, encrypted credentials, permissions, migrations'
+database history, usage/execution records, billing/invoice evidence and all other database
+tables. No rollback or data purge is performed.
+
+If files were customized or the manifest is missing (including original regional modules
+installed outside this command), nothing is automatically removed. Back up/review changes
+and remove that host-owned module through its deployment process; do not generate a fresh
+manifest to bypass the check. Customized provider registration must be removed manually
+before retrying. Do not run `composer remove` after a refused uninstall until you have
+resolved the host's provider and SDK dependencies.
+
+Review/remove remaining host business call sites, sidebar links, schedules and direct SDK
+references before Composer removal, then restart long-lived workers. The SDK cannot safely
+rewrite unrelated host integration code. Composer removal alone deliberately does not
+delete a generated module; no Composer plugin or automatic removal script is installed.
+
+### AI Governance API
+
+The optional module follows the regional Workspaces API structure:
+`App/Http/Controllers/Api/AiGovernanceApiController.php`, `Routes/api.php`, direct route loading
+from its module provider, Sanctum authentication, and `{"success": true, "data": ...}` responses.
+The original web routes remain unchanged. See the [module API reference](stubs/AiGovernance/README.md#json-api)
+for request fields, pagination, permissions, and examples.
+
+The host must have Laravel Sanctum 4 installed and configured, its personal-access-token migration
+applied, and `HasApiTokens` on its user model. Use the existing HRMS login-issued bearer token;
+the module does not create login/token endpoints or require new token abilities. This package
+uses Sanctum as a development dependency for tests, not as a mandatory dependency for SDK-only hosts.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/api/ai-governance/overview` | Filtered tenant/region summary |
+| GET | `/api/ai-governance/analytics` | Module and paginated user breakdowns |
+| GET | `/api/ai-governance/requests` | Paginated usage/request history |
+| GET | `/api/ai-governance/sdk-connection` | Safe connection status/configuration |
+| POST | `/api/ai-governance/connection-check` | Check saved or submitted connection |
+| PUT | `/api/ai-governance/sdk-connection` | Verify and save all six connection fields |
+| GET | `/api/ai-governance/executions/{requestId}` | Owner-scoped status reconciliation; never resubmits work |
+
+Use `Authorization: Bearer <HRMS-login-token>` and `Accept: application/json`. All routes require
+active, matching regional tenant scope and existing governance permissions; SDK mutations
+additionally require administrator/SDK-management authority. API access requires a real Sanctum
+personal access token, not a browser session. Connection saves reverify the submitted credential
+immediately instead of using the web screen's session proof. Credentials are encrypted at rest
+and never returned. These endpoints create no new generation, completion, settlement or billing APIs.
 
 ### Identity and keys
 

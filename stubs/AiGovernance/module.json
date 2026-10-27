@@ -1,0 +1,8 @@
+{
+    "name": "AiGovernance",
+    "alias": "ai-governance",
+    "description": "Tenant-isolated AI consumption and governance",
+    "active": true,
+    "providers": ["Modules\\AiGovernance\\Providers\\AiGovernanceServiceProvider"],
+    "files": []
+}

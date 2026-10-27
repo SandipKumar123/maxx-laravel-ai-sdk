@@ -7,6 +7,17 @@
 
 ## Unreleased - 0.1.0 development
 
+- Added installation manifests and `maxx-ai:uninstall` for confirmation-based removal of
+  unchanged generated modules before Composer removal. Customized modules are refused;
+  configuration, credentials, permissions and database evidence are retained.
+- Added HRMS-style AI Governance APIs under `/api/ai-governance`, using Sanctum bearer
+  tokens, shared tenant/region-scoped reports, paginated history, non-secret connection
+  metadata, stateless verify-before-save, and owner-scoped execution status. Existing web
+  routes and session verification remain supported. Sanctum is a test-only package dependency;
+  module hosts must configure it explicitly.
+- Added `maxx-ai:install` to copy the existing India HRMS AiGovernance module from bundled
+  stubs, preserve existing modules/configuration, and register its provider without reordering
+  host providers. Installation does not run migrations or change SDK execution restrictions.
 - Read-only upstream contract parity/provenance checks with LF/CRLF support and regression tests.
 - Locked and Laravel 12 latest/lowest CI matrices with retained test evidence and pinned
   cross-repository contract parity. Joint real-backend qualification is wired in the platform.
