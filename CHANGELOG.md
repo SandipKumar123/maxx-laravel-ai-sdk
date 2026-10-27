@@ -1,5 +1,10 @@
 # Changelog
 
+## Documentation - 27 October 2026
+
+- Added `docs/USER-MANUAL.md` for existing India/USA/UAE HRMS consumers: six-field connection verification, credential rotation, M2/M1 execution, uncertainty recovery, usage versus billing, and the host invoice-handler boundary.
+- Documented regional locked revision versus standalone SDK source revision and local/test-only acceptance limits. No SDK runtime behavior or production contract changed in this documentation update.
+
 ## Unreleased - 0.1.0 development
 
 - Read-only upstream contract parity/provenance checks with LF/CRLF support and regression tests.

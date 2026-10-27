@@ -387,7 +387,7 @@ backend lockfile, rather than repairing shared Python or overwriting the project
 | Area | Current evidence / remaining requirement |
 | --- | --- |
 | Real SDK-to-backend integration | Passed locally against the real isolated FastAPI server and PostgreSQL, with the dummy provider. |
-| HRMS/CRM installation | Requires the actual host repositories and their PHP/Laravel compatibility audit. |
+| HRMS/CRM installation | India, USA and UAE HRMS adapters and locked SDK references are present; runtime qualification, upgrades and end-to-end host acceptance remain deployment-specific. CRM acceptance is separate. |
 | Host invoice handler | Synthetic PostgreSQL handler verified; actual customer/tax/invoice mapping remains application-owned. |
 | Approved production contracts and SSO | Still requires owner-approved contracts, real identity integration and acceptance. |
 | Database concurrency | Local PostgreSQL 17.11 polling/webhook race passed; target deployment, failure/load and any MySQL qualification remain. |
@@ -404,3 +404,9 @@ gate merely to make a deployment start.
 Roll back the compatible package version while retaining the inbox and host invoice evidence.
 Never delete rows to bypass a billing conflict. A configured Git remote or local passing tests
 do not establish public publication, a release tag, host deployment or production acceptance.
+
+<!-- SDK-INTEGRATION-2026-10-27:START -->
+## HRMS integration documentation (27 October 2026)
+
+The India, USA and UAE applications already reference this package and use `HrmsAiClient` for governed local/test generation. See [the host integration and operator manual](docs/USER-MANUAL.md) for the six-field regional connection workflow, locked/source version distinction, request recovery and host-owned invoice handling. These inspected HRMS applications require Laravel 12 in their manifests; this does not qualify every deployed host or add Laravel 10/11 support. The selected source SDK suite passed 65 tests / 111 assertions; host end-to-end and production acceptance are separate.
+<!-- SDK-INTEGRATION-2026-10-27:END -->
